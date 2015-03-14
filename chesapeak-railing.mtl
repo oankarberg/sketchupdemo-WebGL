@@ -1,0 +1,26 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
+
+newmtl Material__4
+Ka 0.000000 0.000000 0.000000
+Kd 0.729412 0.729412 0.729412
+Ks 0.330000 0.330000 0.330000
+
+newmtl default1
+Ka 0.000000 0.000000 0.000000
+Kd 0.427451 0.219608 0.172549
+Ks 0.330000 0.330000 0.330000
+map_Kd chesapeak-railing/default1.jpg
+
+newmtl Material__1
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl Groundcover_BarkChips
+Ka 0.000000 0.000000 0.000000
+Kd 0.466667 0.454902 0.454902
+Ks 0.330000 0.330000 0.330000
+map_Kd chesapeak-railing/Groundcover_BarkChips.jpg
+

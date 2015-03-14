@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Demo</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+
+
+<script src="build/three.min.js"></script>
+<script src="js/Detector.js"></script>
+<script src="js/Stats.js"></script>
+<script src="js/OrbitControls.js"></script>
+<script src="js/THREEx.KeyboardState.js"></script>
+<script src="js/THREEx.FullScreen.js"></script>
+<script src="js/THREEx.WindowResize.js"></script>
+<script src="OBJMTLLoader.js"></script>
+<script type="text/javascript" src="MTLLoader.js"></script>
+<script type="text/javascript" src="ColladaLoader.js"></script>
+
+<!-- Note the additional JS files! always need all of these for postprocessing. -->
+<script src="js/postprocessing/EffectComposer.js"></script>
+<script src="js/postprocessing/RenderPass.js"></script>
+<script src="js/postprocessing/ShaderPass.js"></script>
+<script src="js/postprocessing/MaskPass.js"></script>
+<script src="js/shaders/CopyShader.js"></script>
+<script src="js/Loader.js"></script>
+
+
+<!-- separate out the shaders specific to this demo -->
+<script src="js/shaders/AdditiveBlendShader.js"></script>
+
+
+
+
+
+<div id="head">
+<h1> Sketchup Demo </h1>
+
+</div>
+
+<div class="wrapper">
+<h3> Iphone imported from sketchup object </h3>
+<div id="container"></div>
+<h3> Chairs imported from sketchup object </h3>
+<div id="container2"></div>
+<div>
+<script>
+
+
+
+// standard global variables
+var container, scene, camera, renderer, controls, stats, composer2;
+var keyboard = new THREEx.KeyboardState();
+var clock = new THREE.Clock();
+// custom global variables
+var cube, floor,floor2;
+var dae2, skin;
+var chair, charSkin;
+
+var container2, scene2, camera2, renderer2, controls2, composer4; //camera2
+
+var loader = new THREE.ColladaLoader();
+
+
+			
+
+loader.options.convertUpAxis = true;
+loader.load( 'models/iphone/IPhone4Gs _5.dae', function ( collada ) {
+
+	dae2 = collada.scene;
+	skin = collada.skins[ 0 ];
+
+	dae2.scale.x = dae2.scale.y = dae2.scale.z = 100;
+	//dae.updateMatrix();
+	init();
+	animate();
+
+} );
+
+	
+
+// FUNCTIONS 		
+function init() 
+{
+	/** SCENE 1**/
+	
+	// SCENE
+	scene = new THREE.Scene();
+	// CAMERA
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene.add(camera);
+	camera.position.set(300,300,500);
+	
+	// RENDERER
+	if ( Detector.webgl )
+		renderer = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer = new THREE.CanvasRenderer(); 
+	renderer.setSize(SCREEN_WIDTH/1.3, SCREEN_HEIGHT/1.3);
+	container = document.getElementById( 'container' );
+	container.appendChild( renderer.domElement );
+	// EVENTS
+	THREEx.WindowResize(renderer, camera);
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	// CONTROLS
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	// LIGHT
+	var light = new THREE.PointLight(0xffff00,1,1000);
+	light.position.set(0,2000,0);
+	//scene.add(light);
+	
+	var imagePrefix = "images/nebula-";
+	var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
+	var imageSuffix = ".png";
+	var skyGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );	
+	
+	var imageURLs = [];
+	for (var i = 0; i < 6; i++)
+		imageURLs.push( imagePrefix + directions[i] + imageSuffix );
+	var textureCube = THREE.ImageUtils.loadTextureCube( imageURLs );
+	var shader = THREE.ShaderLib[ "cube" ];
+	shader.uniforms[ "tCube" ].value = textureCube;
+	/*var skyMaterial = new THREE.ShaderMaterial( {
+		fragmentShader: shader.fragmentShader,
+		vertexShader: shader.vertexShader,
+		uniforms: shader.uniforms,
+		depthWrite: false,
+		side: THREE.BackSide
+	} );*/
+
+	var skyMaterial  = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.BackSide } );
+
+	var cubeGeom = new THREE.BoxGeometry( 100, 100, 100);
+	var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+	var cubeBox = new THREE.Mesh( cubeGeom, material );
+	//scene.add(cubeBox);
+
+	var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+
+	scene.add( skyBox );
+
+	////////////
+	// CUSTOM //
+	////////////
+	
+	// create custom material from the shader code above
+	//   that is within specially labeled script tags
+	
+	
+
+	var sphereGeo = new THREE.SphereGeometry(100, 32, 16);
+ 
+
+
+
+
+  	 dae2.rotation.y = -Math.PI/2;
+  	 dae2.rotation.x = -Math.PI/2;
+  	 dae2.position.y = 90;
+  	 dae2.position.x = -80;
+  	 dae2.position.z = 120;
+  	 scene.add(dae2);
+ 
+	camera.lookAt(scene.position);
+
+	var floorMaterial = new THREE.MeshLambertMaterial( { color: 0x444444, side: THREE.DoubleSide } );
+	var floorGeometry = new THREE.BoxGeometry(500, 500, 10, 10);
+	floor = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor.rotation.x = Math.PI/2;
+	floor.position.set(0,0,0);
+	scene.add(floor);
+
+   	//laddar in modell
+
+   	
+	// create secondary scene to add atmosphere effect
+	var ambientLight = new THREE.AmbientLight(0xbbbbbb);
+
+
+	var directionalLight = new THREE.DirectionalLight( 0xbbbbbb );
+	    directionalLight.position.set( 100, 100, 100 ).normalize();
+	scene.add(directionalLight);
+	//scene.add(ambientLight);
+
+	
+	//var cameraPerspektiv = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+	//cameraPerspektiv.position = camera.position;
+	//cameraPerspektiv.rotation = camera.rotation;	
+	//dae.add( camera2 );
+	
+	
+
+	
+	////////////////////////////////////////////////////////////////////////
+	// final composer will blend composer2.render() results with the scene 
+	////////////////////////////////////////////////////////////////////////
+
+
+	/////////
+	// GUI //
+	/////////
+	
+    renderer.autoClear = false;
+    renderer.setClearColor(0x000000, 0.0);
+   	init2();
+}
+
+function init2(){
+	/** SCENE 2**/
+	// SCENE
+	scene2 = new THREE.Scene();
+	// CAMERA
+	var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight;
+	var VIEW_ANGLE = 45, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.1, FAR = 20000;
+	camera2 = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR);
+	scene2.add(camera2);
+	camera2.position.set(0,200,400);
+		// RENDERER
+	if ( Detector.webgl )
+		renderer2 = new THREE.WebGLRenderer( {antialias:true} );
+	else
+		renderer2 = new THREE.CanvasRenderer(); 
+	renderer2.setSize(SCREEN_WIDTH/1.3, SCREEN_HEIGHT/1.3);
+	container2 = document.getElementById( 'container2' );
+	container2.appendChild( renderer2.domElement );
+	// EVENTS
+	THREEx.WindowResize(renderer2, camera2);
+	THREEx.FullScreen.bindKey({ charCode : 'm'.charCodeAt(0) });
+	// CONTROLS
+	controls2 = new THREE.OrbitControls( camera2, renderer2.domElement );
+
+	// LIGHT
+	var light = new THREE.PointLight(0xffff00,1,1000);
+	light.position.set(0,2000,0);
+	//scene.add(light);
+	
+	var imagePrefix = "images/nebula-";
+	var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
+	var imageSuffix = ".png";
+	var skyGeometry = new THREE.BoxGeometry( 10000, 10000, 10000 );	
+	
+	var imageURLs = [];
+	for (var i = 0; i < 6; i++)
+		imageURLs.push( imagePrefix + directions[i] + imageSuffix );
+	var textureCube = THREE.ImageUtils.loadTextureCube( imageURLs );
+	var shader = THREE.ShaderLib[ "cube" ];
+	shader.uniforms[ "tCube" ].value = textureCube;
+	//SKYBOX
+
+	var skyMaterial  = new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.BackSide } );
+
+	var cubeGeom = new THREE.BoxGeometry( 100, 100, 100);
+	var material = new THREE.MeshBasicMaterial( {color: 0xffffff} );
+	var cubeBox = new THREE.Mesh( cubeGeom, material );
+	//scene.add(cubeBox);
+
+	var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+
+	scene2.add( skyBox );
+
+
+	// create custom material from the shader code above
+	//   that is within specially labeled script tags
+
+  
+
+  /*	 chair.rotation.y = -Math.PI/2;
+  	 chair.rotation.x = -Math.PI/2;
+  	 chair.position.y = 90;
+  	 chair.position.x = -80;
+  	 chair.position.z = 120;
+  	 scene2.add(chair);*/
+  	 //dae.position.y = 4;
+  	// dae.position.x = 100;
+  	// scene.add(dae);
+	//camera2.lookAt(chair.position);
+
+	var floorMaterial = new THREE.MeshLambertMaterial( { color: 0x444444, side: THREE.DoubleSide } );
+	var floorGeometry = new THREE.BoxGeometry(500, 500, 10, 10);
+	floor2 = new THREE.Mesh(floorGeometry, floorMaterial);
+	floor2.rotation.x = Math.PI/2;
+	floor2.position.set(0,0,0);
+	scene2.add(floor2);
+
+   	//laddar in modell
+
+   	
+	// create secondary scene to add atmosphere effect
+	var ambientLight = new THREE.AmbientLight(0xbbbbbb);
+
+
+	var directionalLight = new THREE.DirectionalLight( 0xbbbbbb );
+	    directionalLight.position.set( 100, 100, 100 ).normalize();
+	scene2.add(directionalLight);
+	//scene2.add(ambientLight);
+
+
+	////////////////////////////////////////////////////////////////////////
+	// final composer will blend composer2.render() results with the scene 
+	////////////////////////////////////////////////////////////////////////
+		camera2.lookAt(scene2.position);
+	
+
+	/////////
+	// GUI //
+	/////////
+//  renderer2.autoClear = false;
+   // renderer2.setClearColor(0x000000, 0.0);
+   
+    loader.options.convertUpAxis = true;
+			loader.load( 'models/chair/walnut.dae', function ( collada ) {
+
+				chair = collada.scene;
+				skin = collada.skins[ 0 ];
+
+				chair.scale.x = chair.scale.y = chair.scale.z = 4;
+
+				chair.updateMatrix();
+				 chair.position.y = 4;
+  				chair.position.x = 100;
+  				chair.rotation.y = Math.PI/2;
+  				chair.rotation.x = -Math.PI/2;
+			  	 floor2.add(chair);
+							
+				animate();
+
+			} );
+}
+
+function animate() 
+{
+    requestAnimationFrame( animate );
+	render();		
+	update();
+}
+
+function update()
+{
+	if ( keyboard.pressed("z") ) 
+	{ 
+		// do something
+	}
+	
+	controls.update();
+	
+}
+
+function render() 
+{
+	
+	renderer.render(scene, camera);
+
+	renderer2.render(scene2, camera2);
+	floor2.rotation.z +=0.005;
+
+}
+
+</script>
+
+
+</body>
+</html>
